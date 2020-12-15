@@ -47,6 +47,7 @@ NPC Actors
 (<Name>!remove) Removes the NPC.
 (<Name>!promote) Changes an NPC into a DM-Owned PC.
 (<Name>!demote) Changes a PC into an NPC.
+(<Name>!import {<json>}) Can be used to quickly insert an NPC using JSON. 
 
 Team Management
 (team join <Meat, Astral, or Matrix>) All players join the fight using either the selected Initiative (if listed), or Meatspace Initiative.

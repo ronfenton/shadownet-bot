@@ -8,12 +8,35 @@ mongoose.connect(process.env.DB_ADDRESS,{useNewUrlParser:true,useUnifiedTopology
 
 const characterSchema = new mongoose.Schema({
     name: String,
-    def: {type: Number,default:0},
-    flags: {type: [String],default:[]},
-    initiative: {type: String,default:"1d6+1"},
-    note: {type: String,default:""},
+    def: { type: Number,default:0 },
+    soak: {
+        body: { type: Number, default: 0, required: true},
+        temp: { type: Number }
+    },
+    armour: {
+        armour: {type: Number, default:0, required: true},
+        temp: {type: Number},
+        hard: {type: Number},
+    },
+    flags: {default: {}},
+    initiative: {
+        meat: {
+            type: String,
+            default: "1d",
+            required: true
+        },
+        matrix: { type: String },
+        astral: { type: String }
+    },
+    resources: {
+        nuyen: {type: Number, default:0, required: true},
+        cred: {type:Number, default:0, required: true},
+        not: {type:Number, default:0, required: true},
+        karma: {type:Number,default:0, required: true}
+    },
+    note: { type: String },
     owner_id:String
-})
+}, { minimize : false })
 const playerSchema = new mongoose.Schema({
     characters: [String],
     discord_id: String,
@@ -53,7 +76,7 @@ client.on('message',message => {
     // if message originated from a bot; ignore it.
     if(message.author.bot){ return; }
     
-    let input = message.content.match(/(?<=\()(?<actor>[\w\s]+(?=!))?!?(?<command>set|def|resist|init|info|[\d]+[!egw]*)(?:\s(?<args>[^\)]+))?(?=\))/i);
+    let input = message.content.match(/(?<=\()(?<actor>[\w\s]+(?=!))?!?(?<command>char|def|resist|init|info|[\d]+[!egw]*)(?:\s(?<subcommand>[\w]+))?(?:\s(?<args>[^\)]+))?(?=\))/i);
     if(input === null) { return; }
     else {input = input.groups}
     // note; input.groups.actor = actor replacement, undefined if missing. command = command type. args = remaining string.
@@ -103,29 +126,28 @@ client.on('message',message => {
 
 function handleTask(server,player,request){
 
-    let command = request.command;
-    let args = request.args;
     let actor;
     if(request.actor){
         // create or use existing actor / NPC 
-    } else if (player.active) {
-        // use player's active character
+    } else {
+        actor = server.characters.filter(char => char._id == player.active)[0];
     } 
 
-    // TEMPORARY ACTOR FOR TESTING / DEVELOPMENT.
-    actor = new Character({name:"test",owner_id:"abcdefghijklmnop"})
-
-    let diceTest = command.match(/^(?<die>[\d]+)(?<args>[egw!]+)?/);
+    let diceTest = request.command.match(/^(?<die>[\d]+)(?<args>[egw!]*)$/);
 
     if(diceTest){
-        if(diceTest.groups.args) {
-            args = arrToArgs(diceTest.groups.args.split(""));
-        }
-        console.log(srRoll(Number(diceTest.groups.die),player,args));
+        console.log(srRoll(
+            Number(diceTest.groups.die),
+            player,
+            arrToArgs(diceTest.groups.args.split(""))
+            ));
     } else {
-        if(args) { args = arrToArgs(args.split(/\s/))}
-        switch(command){
-            
+        switch(request.command){
+            case("char"):
+                charHandler(server,player,actor,request.subcommand,request.args)
+                break;
+            default:
+                break;
         }
     }
 
@@ -180,8 +202,131 @@ function srRoll(nDie,player,args){
     return roller(nDie,args["!"],player)
 }
 
+///// CHARACTER MANAGEMENT
+function charHandler(server,player,actor,subcommand,argString){
+    if(subcommand === "new"){
+        console.log("Character Creation Beginning");
+        console.log("Player's existing character is "+player.active);
+
+        let newChar = server.characters.filter(char => char.name === argString)[0];
+
+        if(!newChar){
+            console.log("No Character Found; Creating New");
+            newChar = new Character({
+                name: argString,
+                owner_id: player._id
+            })
+            player.characters.push(newChar._id)
+            server.characters.push(newChar)
+            player.active = newChar._id
+        } else {
+            if(newChar.owner_id != player._id){
+                console.log("A character of this name already exists");
+            } else {
+                console.log("This character was already found as follows");
+                player.active = newChar._id
+                console.log(newChar);
+            }
+        }
+        console.log("Player's character choice follows");
+        console.log(player.active);
+    } else if(subcommand === "change"){
+        let newChar = server.characters.filter(char => char.name === argString)[0];
+
+        if(newChar){
+            if(newChar.owner_id == player._id){
+                player.active = newChar._id
+                console.log("Player's active character changed to --"+newChar.name+"--")
+            } else {
+                console.log("You do not own this character.");
+            }
+        } else {
+            console.log("No character by this name exists. Use the --char new <name>-- command to create one.");
+        }
+    } else {
+        if(!actor){
+            console.log("No active character; please create a character using the --char new <name>-- command.");
+            return;
+        } 
+        
+        switch(subcommand){
+            case("soak"):
+                patchObj(actor.soak,argString,"body");
+                break;
+            case("armour"):
+                patchObj(actor.armour,argString,"armour");
+                break;
+            case("flags"):
+                patchObj(actor.flags,argString);
+                break;
+            case("nuyen"):
+            case("karma"):
+            case("cred"):
+            case("not"):
+                actor.resources[subcommand] = stringMath(actor.resources[subcommand],argString);
+                break;
+            case("name"):
+            case("note"):
+                actor[subcommand] = argString;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+function stringMath(value,string){
+    const FORCE_DECLARE = true;
+    // if false; 25 will be treated as +25. If false, 25 will fail.
+    // this prevents accidental addition when you intended to set, by 
+    // forcing + and =.
+
+    const extracted = string.match(/^(?<operand>[=+])?(?<numeral>-?\d+\.?\d*)$/)
+    console.log(extracted);
+    if(extracted){
+        const x = Number(extracted.groups.numeral);
+        if(extracted.groups.operand === "="){
+            return x;
+        } else {
+            if(!FORCE_DECLARE){
+                return value + x;
+            } else if (extracted.groups.operand === "+" || x < 0){
+                return value + x;
+            } else {
+                console.log("Invalid Sequence; No Change");
+                return value;
+            }
+        }
+    } else {
+        return value;
+    }
+}
+
+// applies all arguments as new properties to the object;
+// however false instead removes the property, and 
+// a string is provided to handle 'defaults'.
+function patchObj(target,argString,defName){
+    const args = arrToArgs(argString.split(" "));
+    for(var arg in args){
+        if(args[arg] === false){
+            if(target.hasOwnProperty(arg)){
+                // note to self; without using Stricts and other logic;
+                // delete does not work as it uses patch-like logic, and just 
+                // assumes no change. Declaring as 'undefined' removes the property.
+                target[arg] = undefined;
+            }
+        } else if (arg === "default" && defName){
+            target[defName] = args[arg]
+        } else {
+            target[arg] = args[arg]
+        }
+    }
+    return target;
+}
+
 function arrToArgs(arr){
     let obj = {};
+    if(!arr) { return obj }
     arr.forEach(function(element){
         let match = element.match(/^(?<name>[A-Za-z!]+)?(?<val>[-+\dd]+)?$/)
         if(match){
@@ -210,6 +355,5 @@ function arrToArgs(arr){
             obj[propname] = propval;
         }
     })
-    console.log(obj);
     return obj;
 }
