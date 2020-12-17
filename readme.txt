@@ -14,8 +14,8 @@ Note- you can append 'g' to any of these, to indicate that the character's Greml
 Character Settings
 (char name <Name>) sets the character's name. (set name Wheaton)
 (char init <Initiative Die with Adds> <Meat, Astral, or Matrix>) sets the character's initiative die, and what type. If type is ommitted, defaults to Meatspace. (set i 3d6+9) or (set i 5d6+12 Matrix)
-(char armour <any of Arm#, Hard#, Temp#>) sets the character's armour. If keyword omitted, assumes armour. (set armour 10) or (set armour hard25)
-(char soak <any of Bod#, Temp#>) sets the characters body soak. If keyword omitted, assumes body. (set soak 7) or (set soak temp2)
+(char armour <any of Armour#, Hard#, Temp#, Aug#>) sets the character's armour. If keyword omitted, assumes armour. (set armour 10) or (set armour hard25)
+(char soak <any of Bod#, Temp#, Aug#>) sets the characters body soak. If keyword omitted, assumes body. (set soak 7) or (set soak temp2)
 (char def #) sets the character's defence pool against attacks. (set def 12)
 (char note <Any Text>) updates a character note; this will appear during your initiative call-outs for reminders.
 (char change <Any Character Name>) changes to a different saved character. If you try set this to a character that isn't recorded, this will ask if you wish to make a new one. (set character Bones)
@@ -61,16 +61,14 @@ GM Only
 (init start) Starts a new Combat Turn with all current NPC Actors.
 (init stop) Clears combat status entirely, also terminates any 'Temp' mods.
 
-Flags and Effects
+Flags
+Character Flags
 nostun - Appropriate for Vehicles and Drones; prevents stun damage entirely.
 gremlin# - Sets a Gremlin variable for the character. Any die roll appended with g will be subjected to it.
-friendly - for GM characters; has them show up in Team initiative.
+team - for NPCs; has them be classified as team members, despite being NPCs
+npc - adjusts for some NPC mechanics.
+nocombat - ignores this character for initiative entirely
+hidden - hides this character from initiative order.
 
-
-expected characters;
-\w (a-zA-Z0-9)
-\s (whitespace)
-! (for NPC commands and edge)
-+ - = (for math commands; always preceeding \d)
-@ (from mentions)
-. (for notes only)
+Server Flags
+allowPCNPCs - Allows characters to have NPC ownership. If false; all NPCs are under GM control only.
