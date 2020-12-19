@@ -35,11 +35,14 @@ Setting up your Player (A lot of this is default)
 
 // USING THE BOT //
 Combat
-(def <#> <vs#>) performs a defense test, with a given modifier. If provided, the vs# indicates how many hits your opponent rolled, to auto-determine pass/fail.
-(resist <ap#> <dmg#>) performs a standard damage resistance test, automatically determining Physical to Stun conversion.
-(init join <Meat, Astral, or Matrix> <#> <pass?>) Joins the fight at a given initiative. If type omitted, meatspace assumed. Optional provision of flat +/- mod.
-(init <-#, +#, or =#>) Modifies existing initiative score.
-(init remove) Removes the given character from the combat chart.
+(combat defend <#> <vs#>) performs a defense test, with a given modifier. If provided, the vs# indicates how many hits your opponent rolled, to auto-determine pass/fail.
+(combat resist <ap#> <dmg#>) performs a standard damage resistance test, automatically determining Physical to Stun conversion.
+(combat join <Meat, Astral, or Matrix> <#> <pass?>) Joins the fight at a given initiative. If type omitted, meatspace assumed. Optional provision of flat +/- mod.
+(combat init <-#, +#, or =#>) Modifies existing initiative score.
+(combat delay <# or 'last'>)  Delays your action for this pass until the specified number, or until the last person.
+(combat blitz) Edge option; gives you the maximum of +5d6.
+(combat seize) Edge option; enforces you act first in every pass this *turn*.
+(combat leave) Removes the given character from the combat chart.
 
 // GM SPECIFIC//
 NPC Actors

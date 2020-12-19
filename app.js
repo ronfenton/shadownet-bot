@@ -23,7 +23,7 @@ client.on("message", (message) => {
   }
 
   const input = message.content.match(
-    /(?<=\()(?<actor>[\w\s]+(?=!))?!?(?<command>char|def|resist|init|info|[\d]+[!egw]*)(?:\s(?<subcommand>[\w]+))?(?:\s(?<args>[^\)]+))?(?=\))/i
+    /(?<=\()(?<actor>[\w\s]+(?=!))?!?(?<command>player|char|def|resist|init|[\d]+[!egw]*)(?:\s(?<subcommand>[\w]+))?(?:\s(?<args>[^\)]+))?(?=\))/i
   );
   if (input === null) {
     return;

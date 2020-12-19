@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sumvalues } = require("./utils");
 require("dotenv").config();
 
 const utils = require(__dirname + "/utils.js");
@@ -65,21 +66,20 @@ characterSchema.methods.modifyResource = function(resource,string){
   this.resources[resource] = utils.stringMath(this.resources[resource],string);
 }
 characterSchema.methods.updateObjProperty = function(property,args){
-  const newProps = utils.strToArgs(args," ");
   const existingProps = this[property];
   const schemaProps = characterSchema.obj[property];
   const default_keys = { armour: "armour", soak: "body", initiative: "meat" };
-  const keys = Object.keys(newProps);
+  const keys = Object.keys(args);
   for (var key in keys) {
     if(schemaProps.hasOwnProperty(keys[key]) || keys[key] === "default_key"){
-      if (newProps[keys[key]] === false) {
+      if (args[keys[key]] === false) {
         if (existingProps.hasOwnProperty(keys[key])) {
           existingProps[keys[key]] = undefined;
         }
       } else if (keys[key] == "default_key") {
-        existingProps[default_keys[property]] = newProps[keys[key]];
+        existingProps[default_keys[property]] = args[keys[key]];
       } else {
-        existingProps[keys[key]] = newProps[keys[key]];
+        existingProps[keys[key]] = args[keys[key]];
       }
     }
   } 
@@ -87,6 +87,21 @@ characterSchema.methods.updateObjProperty = function(property,args){
 characterSchema.methods.delete = function(){
   const clan = this.parent();
   clan.characters.splice(clan.characters.indexOf(this),1)
+}
+characterSchema.methods.defend = function(args){
+
+}
+characterSchema.methods.getNetArmour = function(){
+  return utils.sumvalues(this.armour);
+}
+characterSchema.methods.getNetSoak = function(){
+  return utils.sumvalues(this.soak);
+}
+characterSchema.methods.resist = function(argString){
+  const args = utils.strToArgs(argString," ");
+  const sumvalues = (obj) => Object.keys(obj).reduce((acc, value) => acc + obj[value], 0);
+
+  return armour;
 }
 
 // Player

@@ -1,8 +1,8 @@
-module.exports = {
-  stringMath:stringMath,
-  strToArgs:strToArgs,
-  srRoll: srRoll
-}
+
+
+// takes an obj and sums all values; slightly edited to handle
+// MongoDB objects which often have tertiary, hidden details.
+const sumvalues = (obj) => Object.values(obj).filter((item) => Object.prototype.toString.apply(item) === "[object Number]").reduce((acc, n) => acc + n, 0);
 
 // Converts a string to a set of args in a singular object.
 function strToArgs(input, delimiter) {
@@ -67,6 +67,49 @@ function stringMath(value, string) {
     }
   } else {
     return value;
+  }
+}
+
+function shadowRoll(nDie,edge,player){
+
+  function roller(dice, reroll, player, counter) {
+    // if counter inexistent; make new one.
+    if (!counter) {
+      counter = { hits: 0, fails: 0, rollsets: [], rolled: 0 };
+    }
+
+    // counter for second-pass dice.
+    let moreDie = 0;
+    const rollset = [];
+
+    // generate rolls equal to **dice**
+    for (let x = 0; x < dice; x++) {
+      const roll = Math.ceil(Math.random() * 6);
+      if (roll >= 5) {
+        counter.hits++;
+      }
+      if (roll >= 6) {
+        moreDie++;
+      }
+      if (roll === 1) {
+        counter.fails++;
+      }
+      counter.rolled++;
+      if (player) {
+        player.rollstats[roll]++;
+      }
+      rollset.push(roll);
+    }
+
+    // push the roll set
+    counter.rollsets.push(rollset);
+
+    // if it was an edge roll; roll again with any extra die.
+    if (reroll && moreDie > 0) {
+      nextRoll = roller(moreDie, reroll, player, counter);
+    }
+
+    return roller(nDie,edge,player);
   }
 }
 
@@ -136,4 +179,11 @@ function srRoll(x, player, actor, args) {
 
     return counter;
   }
+}
+
+module.exports = {
+  stringMath:stringMath,
+  strToArgs:strToArgs,
+  srRoll: srRoll,
+  sumvalues: sumvalues
 }

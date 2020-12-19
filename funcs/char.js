@@ -1,10 +1,10 @@
-const { characterSchema } = require("./db");
+module.exports = charManager;
 
-module.exports = manager;
-function manager(player,actor,request,cb){
+function charManager(player,actor,request,cb){
   try{
     const {subcommand,args:argString} = request;
 
+    // these functions take strings.
     switch(subcommand.toLowerCase()){
       case("new"):
         player.createCharacter(argString);
@@ -22,21 +22,12 @@ function manager(player,actor,request,cb){
         player.importCharacter(argString);
         cb(false,`Character imported successfully`);
         break;
-      case("nuyen"): case("karma"): case("notoriety"): case("cred"):
-        actor.modifyResource(subcommand,argString);
-        cb(false,`Character ${subcommand} updated! ${actor.name} now has ${actor.resources[subcommand]} ${subcommand}`);
-        break;
-      case("soak"): case("armour"):
-        actor.updateObjProperty(subcommand,argString);
-        cb(false,`Character ${subcommand} updated! ${actor.name}'s ${subcommand} is now: ${actor[subcommand]}`);
-        break;
-      case("flags"):
-        actor.updateObjProperty(subcommand,argString);
-        cb(false,`Character flags updated! ${actor.name} now has the following flags: ${actor.flags}`);
-        break;
-      case("init"):
-        actor.updateObjProperty("initiative",argString);
-        cb(false,`Character initiative updated! ${actor.name}'s initiative is now: ${actor.initiative}`);
+      case("name"):
+        actor.name = argString;
+        cb(false,`Character renamed to ${actor.name}.`);
+      case("note"):
+        actor.note = argString;
+        cb(false,`Character note updated.`);
         break;
       case("wound"):
         actor.wound_pen = Number(argString);
@@ -50,12 +41,33 @@ function manager(player,actor,request,cb){
         actor.delete();
         cb(false,`Character ${actor.name} deleted.`)
         break;
-      case("name"):
-        actor.name = argString;
-        cb(false,`Character renamed to ${actor.name}.`);
-      case("note"):
-        actor.note = argString;
-        cb(false,`Character note updated.`);
+      case("nuyen"): case("karma"): case("notoriety"): case("cred"):
+        actor.modifyResource(subcommand,argString);
+        cb(false,`Character ${subcommand} updated! ${actor.name} now has ${actor.resources[subcommand]} ${subcommand}`);
+        break;
+      default: 
+        break;
+    }
+
+    // these functions take objects as arguments/flags.
+    const args = utils.strToArgs(argString," ");
+    switch(subcommand.toLowerCase()){
+      case("soak"):
+        actor.updateObjProperty(subcommand,args);
+        cb(false,`Character ${subcommand} updated! ${actor.name}'s ${subcommand} is now: ${actor.getNetSoak()}`);
+        break;
+      case("armour"):
+        actor.updateObjProperty(subcommand,args);
+        cb(false,`Character ${subcommand} updated! ${actor.name}'s ${subcommand} is now: ${actor.getNetArmour()}`);
+        break;
+      case("flags"):
+        actor.updateObjProperty(subcommand,args);
+        cb(false,`Character flags updated! ${actor.name} now has the following flags: ${actor.flags}`);
+        break;
+      case("init"):
+        actor.updateObjProperty("initiative",args);
+        cb(false,`Character initiative updated! ${actor.name}'s initiative is now: ${actor.initiative}`);
+        break;
       default:
         break;
     }

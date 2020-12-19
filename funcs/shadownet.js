@@ -3,6 +3,7 @@ module.exports = {
 }
 
 const charMgr = require(__dirname + "/char.js");
+const playerMgr = require(__dirname + "/player.js");
 const utils = require(__dirname + "/utils.js")
 
 function simpleTest(die,player,actor,args){
@@ -21,11 +22,12 @@ function simpleTest(die,player,actor,args){
 function handleTask(clan, player, request, channel) {
 
   function sendIt(err,str){
-    if(!err){
-      channel.send(`<@${player.discord_id}> ${str}`);
-    } else {
+    if(err){
       channel.send(`<@${player.discord_id}> ${err}`);
-    }
+      return;
+    } 
+    channel.send(`<@${player.discord_id}> ${str}`);
+    return;
   }
 
   const actor = player.getActiveCharacter(request.actor);
@@ -48,6 +50,9 @@ function handleTask(clan, player, request, channel) {
     switch (request.command.toLowerCase()) {
       case "char":
         charMgr(player,actor,request,sendIt);
+        break;
+      case "player":
+        playerMgr(player,request,sendIt);
         break;
       default:
         break;
