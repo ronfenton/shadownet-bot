@@ -108,9 +108,10 @@ function shadowRoll(nDie,edge,player){
     if (reroll && moreDie > 0) {
       nextRoll = roller(moreDie, reroll, player, counter);
     }
-
-    return roller(nDie,edge,player);
+    return counter;
   }
+
+  return roller(nDie,edge,player);
 }
 
 //rolls x die, counting fails (1) and hits (5 & 6).
@@ -185,5 +186,6 @@ module.exports = {
   stringMath:stringMath,
   strToArgs:strToArgs,
   srRoll: srRoll,
-  sumvalues: sumvalues
+  sumvalues: sumvalues,
+  shadowRoll: shadowRoll
 }
