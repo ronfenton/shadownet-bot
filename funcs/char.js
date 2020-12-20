@@ -1,3 +1,4 @@
+const utils = require(__dirname + "/utils.js");
 module.exports = charManager;
 
 function charManager(player,actor,request,cb){

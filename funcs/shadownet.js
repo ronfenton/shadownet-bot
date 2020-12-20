@@ -4,6 +4,7 @@ module.exports = {
 
 const charMgr = require(__dirname + "/char.js");
 const playerMgr = require(__dirname + "/player.js");
+const combatMgr = require(__dirname + "/combat.js");
 const utils = require(__dirname + "/utils.js")
 
 function simpleTest(die,player,actor,args){
@@ -53,6 +54,9 @@ function handleTask(clan, player, request, channel) {
         break;
       case "player":
         playerMgr(player,request,sendIt);
+        break;
+      case "combat":
+        combatMgr(player,actor,request,sendIt);
         break;
       default:
         break;

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const combatManager = require("./combat");
 const { sumvalues } = require("./utils");
 require("dotenv").config();
 
@@ -88,8 +89,12 @@ characterSchema.methods.delete = function(){
   const clan = this.parent();
   clan.characters.splice(clan.characters.indexOf(this),1)
 }
-characterSchema.methods.defend = function(args){
-
+characterSchema.methods.defenseRoll = function(args,player){
+  const mod = (args.default_key) ? args.default_key : 0;
+  const wound = (this.wound_pen) ? this.wound_pen : 0;
+  const roll = utils.shadowRoll(this.def+mod+wound,false,player);
+  console.log(roll)
+  return roll;
 }
 characterSchema.methods.getNetArmour = function(){
   return utils.sumvalues(this.armour);
@@ -141,10 +146,8 @@ playerSchema.methods.changeCharacter = function (name) {
   }
 };
 playerSchema.methods.getActiveCharacter = function (override) {
-  console.log("Active Player = "+ this);
 
   const clan = this.parent();
-  console.log(clan);
   if(override){
     const actor = clan.getCharacterByName(override);
     if(actor && (this.isGM() || (actor.owner_id == this._id))){
