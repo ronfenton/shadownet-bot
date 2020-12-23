@@ -12,34 +12,38 @@ function strToArgs(input, delimiter) {
   }
   const arr = input.split(delimiter);
   arr.forEach(function (element) {
-    const match = element.match(/^(?<name>[A-Za-z!]+)?(?<val>[-+\dd]+)?$/);
+    const match = element.match(/^(?<keya>[A-Za-z!]+)?(?<val>[-+\dd]+)?(?<keyb>[A-Za-z!]+)?$/);
     if (match) {
-      let {name:key,val} = match.groups;
-
-      console.log(`key ${key} val ${val}`);
+      let {keya:inputkeya,keyb:inputkeyb,val:inputval} = match.groups;
+      let outputkey, outputval;
 
       // if no property name provided; assume it's the default case.
-      if (!key) {
-        key = "default_key";
+      if (!inputkeya && !inputkeyb){
+        outputkey = "default_key";
+      } else {
+        outputkey = inputkeya || inputkeyb
       }
 
       // if no value provided, assume it's a true flag.
-      if (!val) {
-        val = true;
+      if (!inputval) {
+        outputval = true;
       }
 
       // if val = -, set to 'false'.
-      if (val === "-") {
-        val = false;
+      if (inputval === "-") {
+        outputval = false;
       }
 
       // determine if value is a number.
-      if (/^\+?[-\d]+$/.test(val)) {
-        val = Number(val.match(/[-\d]+/));
+      if (/^\+?[-\d]+$/.test(inputval)) {
+        outputval = Number(inputval.match(/[-\d]+/));
+      } else {
+        outputval = inputval
       }
-      obj[key] = val;
+      obj[outputkey] = outputval;
     }
   });
+  console.log(obj);
   return obj;
 }
 
