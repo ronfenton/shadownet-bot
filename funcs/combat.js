@@ -7,34 +7,10 @@ function combatManager(player, actor, request, cb) {
     const args = utils.strToArgs(argString, " ");
     switch (subcommand) {
       case "defend":
-        const defenseRoll = actor.defenseRoll(args, player);
-        if (args.vs) {
-          if (args.vs <= defenseRoll.hits) {
-            cb(
-              false,
-              `${actor.name} **successfully** defended by **${(defenseRoll.hits-args.vs)}** by scoring `+
-              `${defenseRoll.hits} hits on ${defenseRoll.rolled} die. `+
-              `\`[${defenseRoll.rollsets.join("] => [")}]\``
-            );
-          } else {
-            cb(
-              false,
-              `${actor.name} **failed** to defend by **${(defenseRoll.hits-args.vs)*-1}** by scoring `+
-              `${defenseRoll.hits} hits on ${defenseRoll.rolled} die. `+
-              `\`[${defenseRoll.rollsets.join("] => [")}]\``
-            );
-          }
-        } else {
-          cb(
-            false,
-            `${actor.name} scored ${defenseRoll.hits} on ${
-              defenseRoll.rolled
-            } die. \`[${defenseRoll.rollsets.join("] => [")}]\``
-          );
-        }
+        defenseTest(player,actor,args,cb);
         break;
       case "resist":
-        resistTest(player,actor,args);
+        resistTest(player,actor,args,cb);
         break;
 
       // initiative related
@@ -54,7 +30,36 @@ function combatManager(player, actor, request, cb) {
   }
 }
 
-function resistTest(player,actor,args){
+function defenseTest(player,actor,args,cb){
+  console.log("got here");
+  const defenseRoll = actor.defenseRoll(args, player);
+  if (args.vs) {
+    if (args.vs <= defenseRoll.hits) {
+      cb(
+        false,
+        `${actor.name} **successfully** defended by **${(defenseRoll.hits-args.vs)}** by scoring `+
+        `${defenseRoll.hits} hits on ${defenseRoll.rolled} die. `+
+        `\`[${defenseRoll.rollsets.join("] => [")}]\``
+      );
+    } else {
+      cb(
+        false,
+        `${actor.name} **failed** to defend by **${(defenseRoll.hits-args.vs)*-1}** by scoring `+
+        `${defenseRoll.hits} hits on ${defenseRoll.rolled} die. `+
+        `\`[${defenseRoll.rollsets.join("] => [")}]\``
+      );
+    }
+  } else {
+    cb(
+      false,
+      `${actor.name} scored ${defenseRoll.hits} on ${
+        defenseRoll.rolled
+      } die. \`[${defenseRoll.rollsets.join("] => [")}]\``
+    );
+  }
+}
+
+function resistTest(player,actor,args,cb){
 
   // check if Actor is valid / defined enough.
   if(!actor && (!args.armour || !args.body)){
@@ -67,26 +72,29 @@ function resistTest(player,actor,args){
   const resistDie = Math.max(0,armour) + soak;
   const dmg = phys || stun;
   const resistRoll = utils.shadowRoll(resistDie,false,player);
-  const freeHits = Math.floor((actor.armour.hard - ap)/2);
+  const freeHits = Math.floor((actor.armour.hard + Math.min(ap,0))/2);
   const injury = dmg - resistRoll.hits - freeHits;
   
-  console.log(
-    `armour = ${armour}
-    soak = ${soak},
-    resistDie = ${resistDie},
-    dmg = ${dmg},
-    resistRoll = ${resistRoll},
-    injury = ${injury}`
-  )
-
   if(injury <= 0){
-    console.log("All damage resisted");
+    cb(
+      false,
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, completely `+
+      `negating all incoming damage. \`[${resistRoll.rollsets.join("] => [")}]\``
+    )
     return;
   }
-  if(injury > armour && phys){
-    console.log(`Resisted ${resistRoll.hits}${(freeHits) ? ("+"+freeHits+" hardened") : ""}. Remaining ${injury}P suffered. ${resistRoll.rollsets}`)
+  if(injury < armour && phys){
+    cb(
+      false,
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, `+
+      `taking **${injury} Stun** as injury. \`[${resistRoll.rollsets.join("] => [")}]\``
+    )
     return;
   } else {
-    console.log(`Resisted ${resistRoll.hits}${(freeHits) ? ("+"+freeHits+" hardened") : ""}. Remaining ${injury}S suffered. ${resistRoll.rollsets}`)
+    cb(
+      false,
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, `+
+      `taking **${injury} Physical** as injury. \`[${resistRoll.rollsets.join("] => [")}]\``
+    )
   }
 }
