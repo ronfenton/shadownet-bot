@@ -21,7 +21,7 @@ function strToArgs(input, delimiter) {
       if (!inputkeya && !inputkeyb){
         outputkey = "default_key";
       } else {
-        outputkey = inputkeya || inputkeyb
+        outputkey = (inputkeya || inputkeyb).toLowerCase();
       }
 
       // if no value provided, assume it's a true flag.
