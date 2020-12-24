@@ -70,11 +70,18 @@ function resistTest(player,actor,args,cb){
   const armour = (args.armour || actor.getNetArmour()) + ap;
   const soak = args.body || actor.getNetSoak();
   const resistDie = Math.max(0,armour) + soak;
-  const dmg = phys || stun;
+  const dmg = phys || stun || 0;
   const resistRoll = utils.shadowRoll(resistDie,false,player);
   const freeHits = Math.floor((actor.armour.hard + Math.min(ap,0))/2);
   const injury = dmg - resistRoll.hits - freeHits;
   
+  if(!phys && !stun){
+    cb(
+      false,
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**. `
+      `\`[${resistRoll.rollsets.join("] => [")}]\``
+    )
+  }
   if(injury <= 0){
     cb(
       false,
@@ -96,5 +103,6 @@ function resistTest(player,actor,args,cb){
       `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, `+
       `taking **${injury} Physical** as injury. \`[${resistRoll.rollsets.join("] => [")}]\``
     )
+    return;
   }
 }
