@@ -102,12 +102,6 @@ characterSchema.methods.getNetArmour = function(){
 characterSchema.methods.getNetSoak = function(){
   return utils.sumvalues(this.soak);
 }
-characterSchema.methods.resist = function(argString){
-  const args = utils.strToArgs(argString," ");
-  const sumvalues = (obj) => Object.keys(obj).reduce((acc, value) => acc + obj[value], 0);
-
-  return armour;
-}
 
 // Player
 const playerSchema = new mongoose.Schema({
