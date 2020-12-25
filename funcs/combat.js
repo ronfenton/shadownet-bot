@@ -1,7 +1,7 @@
 const utils = require(__dirname + "/utils.js");
 module.exports = combatManager;
 
-function combatManager(player, actor, request, cb) {
+function combatManager(clan,player, actor, request, cb) {
   try {
     const { subcommand, args: argString } = request;
     const args = utils.strToArgs(argString, " ");
@@ -15,6 +15,7 @@ function combatManager(player, actor, request, cb) {
 
       // initiative related
       case "join":
+        clan.combat.addCombatant(actor,args)
         break;
       case "leave":
         break;
@@ -23,6 +24,9 @@ function combatManager(player, actor, request, cb) {
       case "blitz":
         break;
       case "init":
+        break;
+      case "clear":
+        clan.combat.clear();
         break;
     }
   } catch (err) {
@@ -78,14 +82,15 @@ function resistTest(player,actor,args,cb){
   if(!phys && !stun){
     cb(
       false,
-      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**. `
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened bonus)") : ""} hits**. ` +
       `\`[${resistRoll.rollsets.join("] => [")}]\``
     )
+    return;
   }
   if(injury <= 0){
     cb(
       false,
-      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, completely `+
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened bonus)") : ""} hits**, completely `+
       `negating all incoming damage. \`[${resistRoll.rollsets.join("] => [")}]\``
     )
     return;
@@ -93,7 +98,7 @@ function resistTest(player,actor,args,cb){
   if(injury < armour && phys){
     cb(
       false,
-      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened)") : ""} hits**, `+
+      `**${actor.name}** scored **${resistRoll.hits}${(freeHits) ? ("(+"+freeHits+" hardened bonus)") : ""} hits**, `+
       `taking **${injury} Stun** as injury. \`[${resistRoll.rollsets.join("] => [")}]\``
     )
     return;

@@ -56,7 +56,7 @@ function handleTask(clan, player, request, channel) {
         playerMgr(player,request,sendIt);
         break;
       case "combat":
-        combatMgr(player,actor,request,sendIt);
+        combatMgr(clan,player,actor,request,sendIt);
         break;
       default:
         break;

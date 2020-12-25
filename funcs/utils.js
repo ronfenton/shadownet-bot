@@ -1,4 +1,25 @@
+const rollDie = (nDie) => {
+  let sum = 0;
+  const rolls = [];
+  for(var x = 0; x<nDie; x++){
+    const roll = Math.ceil(Math.random()*6);
+    sum+= roll;
+    rolls.push(roll);
+  }
+  return {sum:sum,rolls:rolls};
+}
 
+function initRoll(string,blitz){
+  // if blitz = true; forces 5 die roll.
+
+  const regex = string.match(/(?<add>\d+)\+(?<nDie>\d)d6?/i);
+  const add = Number(regex.groups.add);
+  const nDie = (blitz) ? 5 : Number(regex.groups.nDie);
+  const rolled = rollDie(nDie);
+
+  const score = add+rolled.sum;
+  return {die:rolled.rolls,score:score};
+}
 
 // takes an obj and sums all values; slightly edited to handle
 // MongoDB objects which often have tertiary, hidden details.
@@ -14,10 +35,10 @@ function strToArgs(input, delimiter) {
   arr.forEach(function (element) {
     const match = element.match(/^(?<keya>[A-Za-z!]+)?(?<val>[-+\dd]+)?(?<keyb>[A-Za-z!]+)?$/);
     if (match) {
-      let {keya:inputkeya,keyb:inputkeyb,val:inputval} = match.groups;
-      let outputkey, outputval;
+      const {keya:inputkeya,keyb:inputkeyb,val:inputval} = match.groups;
 
       // if no property name provided; assume it's the default case.
+      let outputkey;
       if (!inputkeya && !inputkeyb){
         outputkey = "default_key";
       } else {
@@ -26,24 +47,26 @@ function strToArgs(input, delimiter) {
 
       // if no value provided, assume it's a true flag.
       if (!inputval) {
-        outputval = true;
+        obj[outputkey] = true;
+        return;
       }
 
       // if val = -, set to 'false'.
       if (inputval === "-") {
-        outputval = false;
+        obj[outputkey] = false;
+        return;
       }
 
       // determine if value is a number.
       if (/^\+?[-\d]+$/.test(inputval)) {
-        outputval = Number(inputval.match(/[-\d]+/));
-      } else {
-        outputval = inputval
+        obj[outputkey] = Number(inputval.match(/[-\d]+/));
+        return;
       }
-      obj[outputkey] = outputval;
+      obj[outputkey] = inputval;
+      return;
     }
   });
-  console.log(obj);
+  console.log(`args ${JSON.stringify(obj)}`);
   return obj;
 }
 
@@ -191,5 +214,7 @@ module.exports = {
   strToArgs:strToArgs,
   srRoll: srRoll,
   sumvalues: sumvalues,
-  shadowRoll: shadowRoll
+  shadowRoll: shadowRoll,
+  rollDie: rollDie,
+  initRoll: initRoll
 }

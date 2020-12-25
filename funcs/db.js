@@ -34,7 +34,7 @@ const characterSchema = new mongoose.Schema(
     initiative: {
       meat: {
         type: String,
-        default: "1d",
+        default: "2+1d",
         required: true,
       },
       matrix: { type: String },
@@ -108,7 +108,7 @@ const playerSchema = new mongoose.Schema({
   discord_id: { type: String, required: true },
   active: String,
   friendly_name: String,
-  rollstats: { default: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 } },
+  rollstats: { default: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }},
   osName: String
 });
 playerSchema.methods.createCharacter = function (name) {
@@ -187,6 +187,74 @@ playerSchema.methods.getAverageDie = function(){
   }
 }
 
+const combatantSchema = new mongoose.Schema({
+  char_id: String,
+  blitz: { type: Boolean, default:false },
+  seize: { type: Boolean, default:false },
+  initiative: { type: Number, default:0 },
+  delayto: { type: Number },
+  hidden: { type: Boolean, default:false }
+})
+
+// Combat
+const combatSchema = new mongoose.Schema({
+  active: {type: [combatantSchema], required: true, default: []}, 
+  acted: {type: [combatantSchema], required: true, default: []},
+  inactive: {type: [combatantSchema],required:true,default:[]},
+  pass: {type: Number, default: 0},
+  started: {type: Boolean, default: false}
+})
+combatSchema.methods.sortInit = function(){
+  this.active.sort((a,b) => {
+    if(a.seize && b.seize){
+      if((a.delayto || a.initiative) > (b.delayto || b.initiative)){ return -1; }
+      if((a.delayto || a.initiative) < (b.delayto || b.initiative)){ return 1; }
+      return 0;
+    }
+    if(a.seize){ return -1; }
+    if(b.seize){ return 1; }
+    if((a.delayto || a.initiative) > (b.delayto || b.initiative)){ return -1; }
+    if((a.delayto || a.initiative) < (b.delayto || b.initiative)){ return 1; }
+    return 0;
+  });
+}
+combatSchema.methods.startCombat = function(){
+  const newArr = this.active.concat(this.acted,this.inactive);
+  this.sortInit();
+  this.active.forEach((element) => console.log(`${element.initiative}: Unknown Character at ID ${element.char_id}`))
+}
+combatSchema.methods.addCombatant = function(actor,args){
+  const [existingCombatant] = this.active.filter((item) => item.char_id == actor._id)
+  if(existingCombatant){
+    console.log("This character is already in the initiative");
+    return;
+  }
+  const initiative = 
+    (args.default_key) || 
+    (args.matrix && actor.initiative.matrix) ||
+    (args.astral && actor.initiative.astral) ||
+    actor.initiative.meat;
+  const roll = utils.initRoll(initiative,args.blitz);
+  const combatant = new Combatant({char_id:actor._id,initiative:roll.score});
+  this.active.push(combatant);
+  this.sortInit();
+  this.showOrder();
+}
+combatSchema.methods.showOrder = function(){
+  const characters = this.parent().characters;
+  console.log("Initiative Order Follows");
+  this.active.forEach(function(element) {
+    const [character] = characters.filter((item) => item._id == element.char_id);
+    console.log(`${element.initiative}: ${character.name}`);
+  })
+  console.log("End Initiative");
+}
+combatSchema.methods.clear = function(){
+  this.active.splice(0,this.active.length);
+  this.inactive.splice(0,this.inactive.length);
+  this.acted.splice(0,this.acted.length);
+}
+
 // Clan
 const clanSchema = new mongoose.Schema({
   gms: { type: [String], default: [] },
@@ -195,7 +263,8 @@ const clanSchema = new mongoose.Schema({
   npcrole: String,
   _id: String,
   name: String,
-  flags:{}
+  flags:{},
+  combat: combatSchema
 },{minimize: false});
 clanSchema.methods.getPlayerByDiscordMember = function (d_member) {
   const [existing] = this.players.filter(
@@ -215,9 +284,14 @@ clanSchema.methods.getCharacterByName = function (name) {
   const [character] = this.characters.filter((item) => item.name === name);
   return character;
 };
+clanSchema.methods.newCombat = function(){
+  this.combat = new Combat({});
+}
 
 const Player = mongoose.model("Player", playerSchema);
 const Clan = mongoose.model("Clan", clanSchema);
+const Combat = mongoose.model("Combat", combatSchema);
+const Combatant = mongoose.model("Combatant", combatantSchema);
 const Character = mongoose.model("Character", characterSchema);
 
 module.exports = {
