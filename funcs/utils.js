@@ -9,16 +9,24 @@ const rollDie = (nDie) => {
   return {sum:sum,rolls:rolls};
 }
 
-function initRoll(string,blitz){
+function initRoll(add,ndie,blitz){
   // if blitz = true; forces 5 die roll.
-
-  const regex = string.match(/(?<add>\d+)\+(?<nDie>\d)d6?/i);
-  const add = Number(regex.groups.add);
-  const nDie = (blitz) ? 5 : Number(regex.groups.nDie);
-  const rolled = rollDie(nDie);
-
+  console.log(`add=${add}, ndie=${ndie}`);
+  const rolled = rollDie((blitz) ? 5 : ndie);
   const score = add+rolled.sum;
   return {die:rolled.rolls,score:score};
+}
+
+/**
+ * Converts a Shadowrun Initiative string into an object returning
+ * (add) adds and (nDie) die to be rolled.
+ * @param {String} string - Shadowrun Initiative Declaration; X+Yd6
+ */
+function strToInit(string){
+  const regex = string.match(/(?<add>\d+)\+(?<nDie>\d)d6?/i);
+  const add = Number(regex.groups.add);
+  const nDie = Number(regex.groups.nDie);
+  return {add:add,nDie:nDie}
 }
 
 // takes an obj and sums all values; slightly edited to handle
@@ -216,5 +224,6 @@ module.exports = {
   sumvalues: sumvalues,
   shadowRoll: shadowRoll,
   rollDie: rollDie,
-  initRoll: initRoll
+  initRoll: initRoll,
+  strToInit:strToInit
 }

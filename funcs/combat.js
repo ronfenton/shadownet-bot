@@ -17,6 +17,9 @@ function combatManager(clan,player, actor, request, cb) {
       case "join":
         clan.combat.addCombatant(actor,args)
         break;
+        case "next":
+          clan.combat.nextCombatant()
+          break;
       case "leave":
         break;
       case "delay":

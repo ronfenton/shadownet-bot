@@ -1,3 +1,5 @@
+const { Character } = require("./db");
+
 const utils = require(__dirname + "/utils.js");
 module.exports = charManager;
 
