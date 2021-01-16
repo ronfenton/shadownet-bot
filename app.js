@@ -56,12 +56,3 @@ client.on("message", (message) => {
     }
   });
 });
-
-
-
-
-
-
-
-
-

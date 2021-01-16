@@ -1,0 +1,2 @@
+serve:
+	node app.js
