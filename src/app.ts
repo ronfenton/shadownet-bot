@@ -5,7 +5,9 @@ const client = new Discord.Client();
 const shadownet = require(__dirname + "/funcs/shadownet.js")
 
 // MongoDB Schemas, DBs Setup.
-const {Clan} = require(__dirname + "/funcs/db.js");
+import { Clan } from "./helpers/db";
+
+// const { Clan } = require(__dirname + "/funcs/db.js");
 
 
 client.once("ready", () => {
