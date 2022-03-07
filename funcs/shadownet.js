@@ -36,10 +36,11 @@ function handleTask(clan, player, request, channel) {
   if(!actor){
     console.log(`Note; No Valid Actor. Some actions will fail by design.`)
   }
-
+  console.log(request.command);
   const diceTest = request.command.match(/^(?<die>[\d]+)(?<args>[egw!]*)$/);
-
+  const diceWithMods = request.command.match(/^(?<die>[\d]+)d6\+?(?<mod>[-\d]+)?$/)
   if (diceTest) {
+    console.log("Got here???");
     const roll = simpleTest(
         Number(diceTest.groups.die),
         player,
@@ -47,6 +48,19 @@ function handleTask(clan, player, request, channel) {
         utils.strToArgs(diceTest.groups.args,"")
       );
     sendIt(roll);
+  } else if (diceWithMods) {
+    console.log("got here");
+    const nDie = Number(diceWithMods.groups.die);
+    const nMod = diceWithMods.groups.mod ? Number(diceWithMods.groups.mod) : 0;
+    let die = [];
+    for(let x = 0; x < nDie; x++) {
+      die.push(Math.ceil(Math.random()*6));
+    }
+    console.log(diceWithMods.groups);
+    const sum = die.reduce((item, acc) => acc += item);
+    const dieString = `[${die.join(", ")}]`
+    const modString = nMod !== 0 ? (nMod < 0 ? `${nMod}` : `+${nMod}`) : "";
+    sendIt(`Rolling ${nDie}d6${modString}. \`${dieString}${modString}\` = ${sum+nMod}`);
   } else {
     switch (request.command.toLowerCase()) {
       case "char":

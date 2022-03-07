@@ -208,10 +208,14 @@ const combatSchema = new mongoose.Schema({
 combatSchema.methods.sortInit = function () {
   this.active.sort((a, b) => {
     if (a.seize && b.seize) {
-      if ((a.delayto || a.initiative_score) > (b.delayto || b.initiative_score)) {
+      if (
+        (a.delayto || a.initiative_score) > (b.delayto || b.initiative_score)
+      ) {
         return -1;
       }
-      if ((a.delayto || a.initiative_score) < (b.delayto || b.initiative_score)) {
+      if (
+        (a.delayto || a.initiative_score) < (b.delayto || b.initiative_score)
+      ) {
         return 1;
       }
       return 0;
@@ -295,7 +299,7 @@ combatSchema.methods.getCurrentCombatant = function () {
   return combatant;
 };
 combatSchema.methods.nextCombatant = function () {
-  if(this.active.length === 0){
+  if (this.active.length === 0) {
     this.nextPass();
   }
   const prevCombatant = this.active.shift();
@@ -314,22 +318,23 @@ combatSchema.methods.nextPass = function () {
   this.active = active;
   this.acted.splice(0, this.acted.length);
 };
-combatSchema.methods.nextCombatTurn = function(){
+combatSchema.methods.nextCombatTurn = function () {
   console.log("New Combat Turn starting");
   const clan = this.parent();
   this.combatants.forEach((element) => {
-    const character = clan.getCharacterById(element.char_id)
+    const character = clan.getCharacterById(element.char_id);
     const initiative = utils.initRoll(
       element.initiative_add + (character.wound_pen || 0),
       element.initiative_die,
-      false);
+      false
+    );
     element.initiative_score = initiative.score;
     console.log(
       `${character.name} rolled ${initiative}: ${initiative_add}+${initiative_die}d6 (${initiative_roll.die} + ${initiative_add}) = ${initiative_roll.score}`
     );
     this.active.push(element);
-  })
-}
+  });
+};
 combatSchema.methods.printOrder = function () {
   const characters = this.parent().characters;
   console.log("Initiative Order Follows");
