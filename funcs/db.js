@@ -266,9 +266,8 @@ combatSchema.methods.addCombatant = function (actor, args) {
     (args.astral && actor.initiative.astral) ||
     actor.initiative.meat;
   // convert found string to number of die and adds.
-  const { add: initiative_add, nDie: initiative_die } = utils.strToInit(
-    initiative
-  );
+  const { add: initiative_add, nDie: initiative_die } =
+    utils.strToInit(initiative);
   // roll initiative.
   const initiative_roll = utils.initRoll(
     initiative_add,
